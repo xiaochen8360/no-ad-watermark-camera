@@ -324,6 +324,26 @@
     </form>
   </div>
 
+  <div id="confirmDialog" class="dialog-backdrop" hidden>
+    <section class="project-dialog confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="confirmDialogTitle">
+      <h2 id="confirmDialogTitle">确认操作</h2>
+      <p id="confirmDialogMessage"></p>
+      <div class="dialog-actions">
+        <button id="cancelConfirmDialog" class="dialog-cancel" type="button">取消</button>
+        <button id="confirmDialogAction" class="dialog-confirm danger" type="button">确定</button>
+      </div>
+    </section>
+  </div>
+
+  <div id="projectActionSheet" class="action-sheet-backdrop" hidden>
+    <section class="project-action-sheet" role="dialog" aria-modal="true" aria-label="工程操作">
+      <p id="projectActionTitle">工程操作</p>
+      <button id="projectActionEdit" type="button">修改</button>
+      <button id="projectActionDelete" class="danger" type="button">删除</button>
+      <button id="projectActionCancel" class="muted" type="button">取消</button>
+    </section>
+  </div>
+
   <script src="./app.js"></script>
 </body>
 </html>

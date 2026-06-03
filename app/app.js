@@ -20,6 +20,8 @@ let lastProjectSubmitAt = 0;
 const selectedPhotoIds = new Set();
 let currentReportDataUrl = "";
 let reportPhotoItems = [];
+let pendingConfirmResolve = null;
+let activeProjectActionId = null;
 
 const el = {
   title: document.querySelector("#pageTitle"),
@@ -76,6 +78,16 @@ const el = {
   defaultLocationInput: document.querySelector("#defaultLocationInput"),
   cancelLocationDialog: document.querySelector("#cancelLocationDialog"),
   confirmLocationDialog: document.querySelector("#confirmLocationDialog"),
+  confirmDialog: document.querySelector("#confirmDialog"),
+  confirmDialogTitle: document.querySelector("#confirmDialogTitle"),
+  confirmDialogMessage: document.querySelector("#confirmDialogMessage"),
+  cancelConfirmDialog: document.querySelector("#cancelConfirmDialog"),
+  confirmDialogAction: document.querySelector("#confirmDialogAction"),
+  projectActionSheet: document.querySelector("#projectActionSheet"),
+  projectActionTitle: document.querySelector("#projectActionTitle"),
+  projectActionEdit: document.querySelector("#projectActionEdit"),
+  projectActionDelete: document.querySelector("#projectActionDelete"),
+  projectActionCancel: document.querySelector("#projectActionCancel"),
   albumCamera: document.querySelector("#albumCamera"),
   photoViewer: document.querySelector("#photoViewer"),
   photoViewerImage: document.querySelector("#photoViewerImage"),
@@ -140,6 +152,25 @@ function bindEvents() {
   });
   el.defaultLocationInput.addEventListener("keydown", (event) => {
     if (event.key === "Escape") closeLocationDialog();
+  });
+  el.confirmDialog.addEventListener("click", (event) => {
+    if (event.target === el.confirmDialog) closeConfirmDialog(false);
+  });
+  el.cancelConfirmDialog.addEventListener("click", () => closeConfirmDialog(false));
+  el.confirmDialogAction.addEventListener("click", () => closeConfirmDialog(true));
+  el.projectActionSheet.addEventListener("click", (event) => {
+    if (event.target === el.projectActionSheet) closeProjectMenus();
+  });
+  el.projectActionCancel.addEventListener("click", closeProjectMenus);
+  el.projectActionEdit.addEventListener("click", () => {
+    const projectId = activeProjectActionId;
+    closeProjectMenus();
+    if (projectId) openProjectDialog(projectId);
+  });
+  el.projectActionDelete.addEventListener("click", () => {
+    const projectId = activeProjectActionId;
+    closeProjectMenus();
+    if (projectId) deleteProject(projectId);
   });
   el.projectDialog.addEventListener("click", (event) => {
     if (event.target === el.projectDialog) closeProjectDialog();
@@ -220,6 +251,19 @@ function bindEvents() {
     input.addEventListener("input", refreshCapturePreviewState);
     input.addEventListener("change", refreshCapturePreviewState);
   });
+
+  document.addEventListener("click", (event) => {
+    if (!event.target.closest(".project-action-sheet") && !event.target.closest("[data-project-more]")) {
+      closeProjectMenus();
+    }
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") {
+      closeProjectMenus();
+      if (!el.confirmDialog.hidden) closeConfirmDialog(false);
+    }
+  });
 }
 
 window.confirmProjectDialogFromDom = confirmProjectDialog;
@@ -281,6 +325,7 @@ function saveState() {
 
 function showView(view) {
   if (!views.includes(view)) return;
+  closeProjectMenus();
   const leavingCapture = state.activeView === "capture" && view !== "capture";
   if (leavingCapture) stopCameraPreview();
   if (view === "capture" && !document.body.classList.contains("camera-live")) {
@@ -412,10 +457,6 @@ function renderProjects() {
           </span>
         </button>
         <button class="more project-more" data-project-more="${project.id}" type="button" aria-label="工程操作">⋮</button>
-        <div class="project-menu" data-project-menu="${project.id}" hidden>
-          <button data-project-edit="${project.id}" type="button">修改</button>
-          <button data-project-delete="${project.id}" type="button">删除</button>
-        </div>
       </article>
     `;
   }).join("");
@@ -431,22 +472,24 @@ function renderProjects() {
   });
 
   el.projectList.querySelectorAll("[data-project-more]").forEach((button) => {
-    button.addEventListener("click", () => {
-      const menu = el.projectList.querySelector(`[data-project-menu="${button.dataset.projectMore}"]`);
-      el.projectList.querySelectorAll("[data-project-menu]").forEach((item) => {
-        if (item !== menu) item.hidden = true;
-      });
-      menu.hidden = !menu.hidden;
+    button.addEventListener("click", (event) => {
+      event.stopPropagation();
+      openProjectActionSheet(button.dataset.projectMore);
     });
   });
+}
 
-  el.projectList.querySelectorAll("[data-project-edit]").forEach((button) => {
-    button.addEventListener("click", () => openProjectDialog(button.dataset.projectEdit));
-  });
+function openProjectActionSheet(projectId) {
+  const project = state.projects.find((item) => item.id === projectId);
+  if (!project) return;
+  activeProjectActionId = projectId;
+  el.projectActionTitle.textContent = project.name;
+  el.projectActionSheet.hidden = false;
+}
 
-  el.projectList.querySelectorAll("[data-project-delete]").forEach((button) => {
-    button.addEventListener("click", () => deleteProject(button.dataset.projectDelete));
-  });
+function closeProjectMenus() {
+  if (el.projectActionSheet) el.projectActionSheet.hidden = true;
+  activeProjectActionId = null;
 }
 
 function markProjectOpened(projectId) {
@@ -604,12 +647,17 @@ function selectPhotosByCurrentGroup() {
   renderSelectionGrid();
 }
 
-function deleteSelectedPhotos() {
+async function deleteSelectedPhotos() {
   if (!selectedPhotoIds.size) {
     showToast("请先选择照片");
     return;
   }
-  if (!confirm(`删除选中的 ${selectedPhotoIds.size} 张照片？`)) return;
+  const accepted = await openConfirmDialog({
+    title: "删除照片",
+    message: `删除选中的 ${selectedPhotoIds.size} 张照片？照片会从 App 内相册移除。`,
+    confirmText: "删除"
+  });
+  if (!accepted) return;
   const project = activeProject();
   project.photos = project.photos.filter((photo) => !selectedPhotoIds.has(photo.id));
   saveState();
@@ -880,6 +928,27 @@ function closeProjectDialog() {
   editingProjectId = null;
 }
 
+function openConfirmDialog({ title = "确认操作", message = "", confirmText = "确定" } = {}) {
+  closeProjectMenus();
+  el.confirmDialogTitle.textContent = title;
+  el.confirmDialogMessage.textContent = message;
+  el.confirmDialogAction.textContent = confirmText;
+  el.confirmDialog.hidden = false;
+  document.body.classList.add("dialog-open");
+  return new Promise((resolve) => {
+    pendingConfirmResolve = resolve;
+  });
+}
+
+function closeConfirmDialog(result) {
+  if (el.confirmDialog.hidden) return;
+  el.confirmDialog.hidden = true;
+  document.body.classList.remove("dialog-open");
+  const resolve = pendingConfirmResolve;
+  pendingConfirmResolve = null;
+  if (resolve) resolve(Boolean(result));
+}
+
 function confirmProjectDialog(event) {
   event?.preventDefault?.();
   event?.stopPropagation?.();
@@ -912,10 +981,15 @@ function updateProjectName(projectId, name) {
   renderAll();
 }
 
-function deleteProject(projectId) {
+async function deleteProject(projectId) {
   const project = state.projects.find((item) => item.id === projectId);
   if (!project) return;
-  if (!confirm(`删除工程「${project.name}」？照片也会从 App 内相册移除。`)) return;
+  const accepted = await openConfirmDialog({
+    title: "删除工程",
+    message: `删除工程「${project.name}」？照片也会从 App 内相册移除。`,
+    confirmText: "删除"
+  });
+  if (!accepted) return;
   state.projects = state.projects.filter((item) => item.id !== projectId);
   if (!state.projects.length) {
     addProject("新工程");
