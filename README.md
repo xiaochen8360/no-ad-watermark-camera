@@ -6,6 +6,7 @@
 
 ## 下载
 
+- GitHub Release：<https://github.com/xiaochen8360/no-ad-watermark-camera/releases/tag/v0.1.0-debug>
 - APK：[`release/no-ad-watermark-camera-debug.apk`](release/no-ad-watermark-camera-debug.apk)
 - 微信传输压缩包：[`release/无广水印-debug-apk.zip`](release/%E6%97%A0%E5%B9%BF%E6%B0%B4%E5%8D%B0-debug-apk.zip)
 - APK SHA256：`d8b557c283b89879b3e423d2c0ba424ea01e83c38250bd0b90e6d9645ed5ce20`
@@ -83,4 +84,3 @@ node android/build-apk.mjs
 - 这是 debug 版本，不是应用商店 release 包。
 - 视频录制保存还没有完全接入系统视频相册。
 - 中文地址名目前建议手动设置默认地点；联网地图反查需要后续接高德/百度等服务。
-
