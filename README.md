@@ -39,13 +39,7 @@
 |---|---|
 | ![工程页](screenshots/01-projects.png) 
 
-| 相册 | 实时水印相机 |
-|---|---|
-| ![相册](screenshots/03-album.png) | ![实时水印相机](screenshots/04-camera.png) |
 
-| 创建工程 | 批量预览 |
-|---|---|
-| | ![批量预览](screenshots/06-batch-preview.png) |
 
 ## 安装方式
 
