@@ -1,0 +1,329 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>无广水印</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="rail">
+      <div class="brand">
+        <span class="mark">印</span>
+        <div>
+          <strong>无广水印</strong>
+          <small>现场证据归档工具</small>
+        </div>
+      </div>
+      <button class="rail-item active" data-view="projects" type="button">
+        <span class="grid-icon"></span>
+        工程
+      </button>
+      <button class="rail-item" data-view="album" type="button">
+        <span class="photo-icon"></span>
+        相册
+      </button>
+      <button class="rail-item" data-view="capture" type="button">
+        <span class="camera-icon"></span>
+        拍照
+      </button>
+      <button class="rail-item" data-view="settings" type="button">
+        <span class="gear-icon"></span>
+        设置
+      </button>
+    </aside>
+
+    <main class="workspace">
+      <header class="topbar">
+        <div>
+          <span class="mode-pill">Liquid Glass · 本地模式</span>
+          <h1 id="pageTitle">工程</h1>
+        </div>
+        <div class="top-actions">
+          <button id="exportProject" class="ghost" type="button">导出工程数据</button>
+          <button id="quickCapture" class="primary" type="button">拍照/导入</button>
+        </div>
+      </header>
+
+      <section class="field-status" aria-label="现场取证状态">
+        <article>
+          <span>LOCAL</span>
+          <strong>离线证据舱</strong>
+          <small>照片只保存在本机</small>
+        </article>
+        <article>
+          <span>BATCH</span>
+          <strong>现场批处理</strong>
+          <small>一次导入多张照片</small>
+        </article>
+        <article>
+          <span>STAMP</span>
+          <strong>水印链路</strong>
+          <small>时间地点工程齐全</small>
+        </article>
+      </section>
+
+      <section id="projectsView" class="view active" aria-label="工程列表">
+        <div class="create-row" aria-label="创建工程">
+          <span class="create-label">创建工程</span>
+          <input id="projectSearch" type="text" placeholder="请输入工程名称" autocomplete="off" />
+          <button id="addProject" class="icon-button" type="button" aria-label="创建工程">+</button>
+        </div>
+        <div class="tabs">
+          <button class="tab" data-project-tab="recent" type="button">最近的</button>
+          <button class="tab" data-project-tab="created" type="button">我创建的</button>
+          <button id="defaultLocationButton" class="default-location-button" type="button">默认地点</button>
+        </div>
+        <div id="projectList" class="project-list"></div>
+      </section>
+
+      <section id="albumView" class="view" aria-label="照片相册">
+        <div class="album-head">
+          <div>
+            <p class="label">当前工程</p>
+            <h2 id="albumProjectName">未选择工程</h2>
+          </div>
+          <div class="segmented">
+            <button id="groupByTime" type="button">时间</button>
+            <button id="groupByPlace" class="active" type="button">地点</button>
+          </div>
+        </div>
+        <div id="albumGrid" class="album-grid"></div>
+      </section>
+
+      <section id="captureView" class="view" aria-label="拍照导入">
+        <div class="capture-layout">
+          <div class="camera-panel">
+            <video id="cameraVideo" playsinline muted></video>
+            <button id="cameraBack" class="camera-back" type="button">返回</button>
+            <button id="cameraSwitch" class="camera-switch" type="button" aria-label="翻转镜头">↻</button>
+            <div id="cameraWatermark" class="camera-watermark" hidden></div>
+            <div id="cameraControls" class="camera-controls" aria-label="相机操作">
+              <button id="cameraShutter" class="camera-action shutter" type="button" aria-label="拍照"></button>
+              <button id="cameraRecord" class="camera-action record" type="button" aria-label="录制视频">
+                <span></span>
+              </button>
+            </div>
+            <canvas id="watermarkCanvas"></canvas>
+            <div id="batchPreview" class="batch-preview" hidden></div>
+            <div id="emptyPreview" class="empty-preview">
+              <span class="camera-big"></span>
+              <strong>拍照或导入照片</strong>
+              <p>第一版会在本地浏览器里生成带水印图片，不上传云端。</p>
+            </div>
+          </div>
+          <form id="captureForm" class="capture-form">
+            <label>
+              工程
+              <select id="projectSelect"></select>
+            </label>
+            <label>
+              地点
+              <input id="placeInput" value="花山一路" />
+            </label>
+            <input id="noteInput" type="hidden" value="" />
+            <label>
+              经度纬度
+              <input id="coordInput" value="114.478902, 30.543171" />
+            </label>
+            <button id="locateButton" class="ghost locate-button" type="button">获取本机定位</button>
+            <div class="time-range">
+              <label>
+                开始时间
+                <input id="timeStartInput" type="datetime-local" />
+              </label>
+              <label>
+                结束时间
+                <input id="timeEndInput" type="datetime-local" />
+              </label>
+            </div>
+            <section class="watermark-live" aria-label="水印效果预览">
+              <p>水印效果预览</p>
+              <div id="watermarkLivePreview" class="watermark-card"></div>
+            </section>
+            <div class="button-row">
+              <button id="startCamera" class="ghost" type="button">开启摄像头</button>
+              <button id="capturePhoto" class="primary" type="button">拍一张</button>
+            </div>
+            <label class="file-drop import-button">
+              <input id="fileInput" type="file" accept="image/*" multiple />
+              <span>批量导入照片</span>
+            </label>
+            <p id="batchStatus" class="batch-status">未选择照片。保存时会按时间段随机写入拍摄时间。</p>
+            <button id="saveCurrent" class="primary full" type="button">保存全部到本机相册</button>
+            <button id="backHome" class="primary full import-back" type="button">返回工程</button>
+          </form>
+        </div>
+      </section>
+
+      <section id="settingsView" class="view" aria-label="设置">
+        <div class="settings-grid">
+          <label>
+            水印标题
+            <input id="watermarkTitle" value="施工记录" />
+          </label>
+          <label>
+            默认天气
+            <input id="weatherInput" value="晴 12℃ 空气良 82%" />
+          </label>
+          <label>
+            默认地址
+            <input id="addressInput" value="武汉市洪山区花山一路9号生态山居九峰李家山" />
+          </label>
+          <label>
+            水印色
+            <input id="accentInput" type="color" value="#2259f2" />
+          </label>
+        </div>
+        <div class="settings-note">
+          <h2>本地边界</h2>
+          <p>照片和工程数据保存在当前浏览器本地存储。第一版不登录、不上传、不接云同步。需要正式桌面版时，再接 Electron 本地文件系统模块。</p>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <nav class="mobile-nav">
+    <button class="active" data-view="projects" type="button"><span class="grid-icon"></span>工程</button>
+    <button data-view="capture" type="button"><span class="photo-icon"></span>导入</button>
+    <button data-view="album" type="button"><span class="photo-icon"></span>相册</button>
+  </nav>
+
+  <button id="floatingAdd" class="float add" type="button" aria-label="新增工程">+</button>
+  <button id="floatingCamera" class="float camera" type="button" aria-label="拍照"><span class="camera-icon"></span></button>
+  <button id="albumCamera" class="album-camera-action" type="button" aria-label="工程拍照"><span class="camera-icon"></span></button>
+
+  <div id="photoViewer" class="photo-viewer" hidden>
+    <section class="photo-viewer-card" role="dialog" aria-modal="true" aria-label="照片详情">
+      <header class="photo-viewer-top">
+        <button id="closePhotoViewer" class="viewer-back" type="button" aria-label="返回">←</button>
+        <button class="viewer-info" type="button" aria-label="照片信息">i</button>
+      </header>
+      <nav class="photo-viewer-tabs" aria-label="照片操作">
+        <button id="viewerEditTab" class="active" type="button">
+          <span class="edit-icon"></span>
+          修改水印
+        </button>
+        <button id="viewerInfoTab" type="button">
+          <span class="info-icon"></span>
+          照片信息
+        </button>
+      </nav>
+      <div class="photo-viewer-stage">
+        <img id="photoViewerImage" alt="照片预览" />
+      </div>
+      <form id="viewerEditPanel" class="viewer-panel viewer-edit-panel">
+        <label>
+          工程
+          <input id="viewerTitleInput" />
+        </label>
+        <label>
+          地点
+          <input id="viewerPlaceInput" />
+        </label>
+        <input id="viewerNoteInput" type="hidden" value="" />
+        <label>
+          经纬度
+          <input id="viewerCoordInput" />
+        </label>
+        <label>
+          时间
+          <input id="viewerTimeInput" type="datetime-local" />
+        </label>
+        <p id="viewerEditHint" class="viewer-hint"></p>
+        <button id="saveViewerWatermark" class="primary full" type="button">保存并覆盖本机相册</button>
+      </form>
+      <section id="viewerInfoPanel" class="viewer-panel viewer-info-panel" hidden></section>
+    </section>
+  </div>
+
+  <div id="albumSelection" class="album-selection" hidden>
+    <header class="selection-topbar">
+      <button id="closeSelection" class="selection-back" type="button" aria-label="返回">←</button>
+      <strong id="selectionCount">选中(0)</strong>
+      <button id="selectByDate" type="button">按日期选</button>
+      <button id="selectAllPhotos" type="button">全选</button>
+    </header>
+    <div id="selectionGrid" class="selection-grid"></div>
+    <nav class="selection-actions" aria-label="批量操作">
+      <button id="shareSelected" type="button"><span class="share-icon"></span>分享</button>
+      <button id="moveSelected" type="button"><span class="move-icon"></span>移动</button>
+      <button id="deleteSelected" type="button"><span class="trash-icon"></span>删除</button>
+      <button id="collageSelected" type="button"><span class="collage-icon"></span>拼图汇报</button>
+    </nav>
+  </div>
+
+  <div id="collageReport" class="collage-report" hidden>
+    <header class="report-topbar">
+      <button id="closeReport" class="report-back" type="button" aria-label="返回">←</button>
+      <strong>新建拼图汇报</strong>
+      <button id="saveReport" type="button">保存</button>
+    </header>
+    <main class="report-workspace">
+      <section class="report-editor" aria-label="汇报内容编辑">
+        <label>
+          汇报标题
+          <input id="reportTitleInput" value="工作汇报" />
+        </label>
+        <label>
+          汇报说明
+          <input id="reportSubtitleInput" value="现场照片汇总报告" />
+        </label>
+        <label>
+          汇报人
+          <input id="reportReporterInput" placeholder="请输入汇报人" />
+        </label>
+        <label>
+          汇报内容
+          <textarea id="reportContentInput" rows="2" placeholder="请输入汇报内容"></textarea>
+        </label>
+      </section>
+      <section class="report-preview" aria-label="拼图汇报预览">
+        <img id="reportImage" alt="拼图汇报预览" />
+      </section>
+    </main>
+    <label class="report-add-photo">
+      <input id="reportFileInput" type="file" accept="image/*" multiple />
+      <span>+ 图片</span>
+    </label>
+  </div>
+
+  <div id="projectDialog" class="dialog-backdrop" hidden>
+    <form id="projectDialogForm" class="project-dialog" role="dialog" aria-modal="true" aria-labelledby="projectDialogTitle">
+      <h2 id="projectDialogTitle">创建工程</h2>
+      <label>
+        <span>输入工程名称</span>
+        <input id="newProjectName" type="text" autocomplete="off" />
+      </label>
+      <div class="dialog-actions">
+        <button id="cancelProjectDialog" class="dialog-cancel" type="button">取消</button>
+        <button id="confirmProjectDialog" class="dialog-confirm" type="submit">确定</button>
+      </div>
+    </form>
+  </div>
+
+  <div id="locationDialog" class="dialog-backdrop" hidden>
+    <form id="locationDialogForm" class="project-dialog" role="dialog" aria-modal="true" aria-labelledby="locationDialogTitle">
+      <h2 id="locationDialogTitle">默认地点</h2>
+      <label>
+        <span>选择常用地点</span>
+        <select id="defaultLocationSelect"></select>
+      </label>
+      <details id="defaultLocationEditor" class="location-editor">
+        <summary>新增或修改地点</summary>
+        <label>
+          <span>地点地址</span>
+          <input id="defaultLocationInput" type="text" autocomplete="off" />
+        </label>
+      </details>
+      <div class="dialog-actions">
+        <button id="cancelLocationDialog" class="dialog-cancel" type="button">取消</button>
+        <button id="confirmLocationDialog" class="dialog-confirm" type="submit">保存</button>
+      </div>
+    </form>
+  </div>
+
+  <script src="./app.js"></script>
+</body>
+</html>

@@ -1,0 +1,21 @@
+{
+  "type": "app",
+  "name": "无广水印",
+  "slug": "local-watermark-camera",
+  "brief": "本地版工程水印相机：创建工程，拍照或导入照片，自动压入时间、地点、工程名、备注水印，并按工程、地点、时间归档导出。",
+  "status": "preview-ready",
+  "modules": [],
+  "preview": {
+    "command": "pnpm preview:app -- --slug local-watermark-camera --port 4193",
+    "url": "http://127.0.0.1:4193/"
+  },
+  "evidence": [
+    "projects/app/local-watermark-camera/evidence/desktop-preview.png",
+    "projects/app/local-watermark-camera/evidence/mobile-preview.png",
+    "projects/app/local-watermark-camera/evidence/mobile-batch-import.png",
+    "projects/app/local-watermark-camera/evidence/mobile-batch-preview-all.png",
+    "projects/app/local-watermark-camera/evidence/mobile-watermark-live-preview.png",
+    "projects/app/local-watermark-camera/evidence/mobile-project-sketch-layout.png",
+    "projects/app/local-watermark-camera/evidence/mobile-save-seven-album.png"
+  ]
+}
