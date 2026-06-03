@@ -37,7 +37,7 @@
 
 | 工程页 | 批量导入 |
 |---|---|
-| ![工程页](screenshots/01-projects.png) | ![批量导入](screenshots/02-import.png) |
+| ![工程页](screenshots/01-projects.png) 
 
 | 相册 | 实时水印相机 |
 |---|---|
@@ -45,7 +45,7 @@
 
 | 创建工程 | 批量预览 |
 |---|---|
-| ![创建工程](screenshots/05-create-project.png) | ![批量预览](screenshots/06-batch-preview.png) |
+| | ![批量预览](screenshots/06-batch-preview.png) |
 
 ## 安装方式
 
