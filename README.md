@@ -8,7 +8,7 @@
 
 - GitHub Release：<https://github.com/xiaochen8360/no-ad-watermark-camera/releases/tag/v0.1.0-debug>
 - APK：[`release/no-ad-watermark-camera-debug.apk`](release/no-ad-watermark-camera-debug.apk)
-- 微信传输压缩包：[`release/无广水印-debug-apk.zip`](release/%E6%97%A0%E5%B9%BF%E6%B0%B4%E5%8D%B0-debug-apk.zip)
+- 微信传输压缩包：[`release/no-ad-watermark-camera-debug.zip`](release/no-ad-watermark-camera-debug.zip)
 - APK SHA256：`d8b557c283b89879b3e423d2c0ba424ea01e83c38250bd0b90e6d9645ed5ce20`
 
 如果从 GitHub 下载，建议点 Releases 里的 APK；如果微信直接传 APK 被拦，可以传 zip，收到后解压安装。
